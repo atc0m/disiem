@@ -16,6 +16,8 @@ A single request json object from alert logs:
 
 Split data into overlapping timeslices and load two minute sections from each device / software combination. A register is kept for each increment of delta time, marking the file and position to continue in 2 steps. Timeslices begin at 1/2 of the previous slice to catch overlapping network sessions between the log increments. Every alert/request is loaded twice and checked with the previous and following time slice.
 
+![siganalyzer_segments](https://user-images.githubusercontent.com/6486510/29896111-a3080aaa-8dd3-11e7-920c-493a0599b2ce.png)
+
 ## Wrapper
 
 Each software's log can contain different field names and datetime formats which require custom dictionary subclasses to abstract the interaction with the varying json structures.
