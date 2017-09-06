@@ -7,6 +7,7 @@ import redis
 import pytz
 import itertools
 import pickle
+#import pandas as pd
 from collections import OrderedDict
 from storage import Storage
 
@@ -28,7 +29,7 @@ class Importer(object):
 
     def log_import(self):
         results = []
-        for i in range(20):
+        for i in range(40):
             print '---- Iteration {} ----'.format(i)
             logs = self.storage.time_slice(i)
             results.append(self.find_common(logs))
@@ -38,6 +39,30 @@ class Importer(object):
     def write_file(self, item):
         with open('results', 'wb') as fle:
             fle.write(item)
+
+    def transform_analysis(self):
+        result_a = bytes()
+        with open('results', 'rb') as fle:
+            result_a = fle.read()
+        results = pickle.loads(result_a)
+        self.print_analysis(results)
+
+    def print_analysis(self, some_analysis, sorting_term=None):
+        if some_analysis:
+            col_order = [k for k in some_analysis[0].keys()]
+
+        # transform to dict of dict indexed by class name
+        analysis = {}
+        for i, stats in enumerate(some_analysis):
+            analysis[i] = dict([(str(k), len(v)) for k, v in stats.items()])
+
+        # Create a dataframe and sort if required
+        df = pd.DataFrame.from_dict(analysis, orient='index')
+        if sorting_term:
+            df = df.sort_values(sorting_term, ascending=False)
+
+        # return analysis in csv format as a string
+        return df.to_csv('output.csv')
 
     def find_common(self, logs):
         combinations = []
