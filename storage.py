@@ -71,7 +71,7 @@ class Storage(object):
                 if state[0] == name:
                     found = True
                 if found:
-                    print name
+                    print '---- current state {} ----'.format(state)
                     with open(path) as fn:
                         file_end = True
                         for i, line in enumerate(fn):
@@ -91,7 +91,9 @@ class Storage(object):
                             self.delta_map[delta + 2] = {}
                         if not self.delta_map.get(delta + 2).get(key):
                             self.delta_map[delta + 2][key] = {}
-                        self.delta_map[delta + 2][key][device] = (name, path, i)
+                        next_state = (name, path, i)
+                        print '---- saved state {} ----'.format(next_state)
+                        self.delta_map[delta + 2][key][device] = next_state
                         break
 
         return logs

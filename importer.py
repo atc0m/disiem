@@ -29,9 +29,10 @@ class Importer(object):
     def log_import(self):
         results = []
         for i in range(20):
+            print '---- Iteration {} ----'.format(i)
             logs = self.storage.time_slice(i)
             results.append(self.find_common(logs))
-            print logs
+
         self.write_file(pickle.dumps(results))
 
     def write_file(self, item):
