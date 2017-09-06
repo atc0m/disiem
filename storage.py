@@ -10,7 +10,7 @@ class Storage(object):
         self.start = start
         self.increment = increment
         self.conf = conf
-        self.ignored = ['.gz']
+        self.ignored = ['.gz', 'ESS']
         self.dict_manager = WrapperManager(conf)
         self.delta_map = {}
         self.log_structure = self.explore_files(data_folder)
@@ -50,38 +50,35 @@ class Storage(object):
     def time_slice(self, delta):
         data = {}
         if self.delta_map.get(delta):
-            start_time = self.start + timedelta(seconds=delta*(self.increment/2))
-            end_time = start_time + timedelta(seconds=self.increment)
             for software, devices in self.delta_map[delta].items():
                 print software
                 data[software] = self.load_data(
                     devices=devices,
                     key=software,
-                    start=start_time,
-                    end=end_time,
-                    delta=delta,
+                    delta=delta
                 )
                 print len(data[software])
         return data
 
-    def load_data(self, key, devices, start, end, delta):
+    def load_data(self, key, devices, delta):
+        start = self.start + timedelta(seconds=delta*(self.increment/2))
+        end = start + timedelta(seconds=self.increment)
         logs = {}
         for device, state in devices.items():
             print device
             found = False
-            for i, (name, path) in enumerate(self.log_structure[key][device].items()):
+            for name, path in self.log_structure[key][device].items():
                 if state[0] == name:
                     found = True
                 if found:
                     print name
                     with open(path) as fn:
-
                         file_end = True
                         for i, line in enumerate(fn):
-                            if line > state[2]:
+                            if i >= state[2]:
                                 log = self.dict_manager.get_wrapper(key, json.loads(line))
                                 if log.get_time() < start:
-                                    pass
+                                    continue
                                 if log.get_time() > end:
                                     file_end = False
                                     break
