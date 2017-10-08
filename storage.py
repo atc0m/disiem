@@ -43,9 +43,44 @@ class Storage(object):
         # second slice does not start where the first one ends
         self.delta_map[1] = self.delta_map[0].copy()
         self.display_structure(structure)
-        print 'Delta Map'
-        print self.delta_map
+        print structure
         return structure
+
+    def time_map(self):
+        time_coverage = {}
+        for software, devices in self.log_structure.items():
+            print software
+            time_coverage[software] = self.find_window(software, devices)
+            print '\t'.join([software, str(time_coverage[software])])
+        return time_coverage
+
+    def find_window(self, software, file_dict):
+        window = {
+            'start': {
+                'time': None,
+                'compare': lambda og, current: og > current,
+                'region': lambda x: x[0],
+                'files': [file_paths.values()[0] for _, file_paths in file_dict.items()]
+            },
+            'end': {
+                'time': None,
+                'compare': lambda og, current: og < current,
+                'region': lambda x: x[-1],
+                'files': [file_paths.values()[-1] for _, file_paths in file_dict.items()]
+            }
+        }
+        import code
+        code.interact(local=locals())
+
+        for part, time in window.items():
+            for path in time['files']:
+                with open(path) as fl:
+                    lines = fl.readlines()
+                    log = self.dict_manager.get_wrapper(software, json.loads(time['region'](lines)))
+                    if not time['time'] or time['compare'](time['time'], log.get_time()):
+                        window[part]['time'] = log.get_time()
+        return window
+
 
     def time_slice(self, delta):
         data = {}

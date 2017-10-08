@@ -1,3 +1,8 @@
-﻿*.pyc
+*.pyc
 data/
 env/
+test/
+storage/
+tmp/
+reports/
+cleaning/
