@@ -48,7 +48,7 @@ class Importer(object):
 
     def transform_analysis(self):
         result_a = bytes()
-        with open('storage/common_log_per_slice', 'rb') as fle:
+        with open('reports/bak', 'rb') as fle:
             result_a = fle.read()
         results = pickle.loads(result_a)
         self.print_analysis(results)

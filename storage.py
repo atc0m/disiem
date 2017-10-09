@@ -108,36 +108,42 @@ class Storage(object):
         for device, state in devices.items():
             print device
             found = False
+            files_end = True
             for name, path in self.log_structure[key][device].items():
                 if state[0] == name:
                     found = True
                 if found:
                     print '---- current state {} ----'.format(state)
                     with open(path) as fn:
-                        file_end = True
                         for i, line in enumerate(fn):
                             if i >= state[2]:
                                 log = self.dict_manager.get_wrapper(key, json.loads(line))
                                 if log.get_time() < start:
                                     continue
                                 if log.get_time() > end:
-                                    file_end = False
+                                    files_end = False
                                     break
                                 if logs.get(log.get_src()):
                                     logs[log.get_src()].append(log)
                                 else:
                                     logs[log.get_src()] = [log]
-                    if not file_end:
-                        if not self.delta_map.get(delta + 2):
-                            self.delta_map[delta + 2] = {}
-                        if not self.delta_map.get(delta + 2).get(key):
-                            self.delta_map[delta + 2][key] = {}
+                    if not files_end:
                         next_state = (name, path, i)
-                        print '---- saved state {} ----'.format(next_state)
-                        self.delta_map[delta + 2][key][device] = next_state
+                        self.save_state(delta, key, device, next_state)
                         break
+            if files_end:
+                next_state = (name, path, i)
+                self.save_state(delta, key, device, next_state)
 
         return logs
+
+    def save_state(delta, key, device, state):
+        if not self.delta_map.get(delta + 2):
+            self.delta_map[delta + 2] = {}
+        if not self.delta_map.get(delta + 2).get(key):
+            self.delta_map[delta + 2][key] = {}
+        print '---- saved state {} ----'.format(state)
+        self.delta_map[delta + 2][key][device] = state
 
     def display_structure(self, structure):
         print '----\tFile Structure\t----'
