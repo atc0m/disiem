@@ -38,14 +38,13 @@ class Importer(object):
             print '---- Iteration {} ----'.format(i)
             logs = self.storage.time_slice(i)
             results.append(self.find_common(logs))
-            if i % 60 == 0:
-                self.write_file(pickle.dumps(results), 'bak' + str(i))
-
-        self.write_file(pickle.dumps(results), 'common_log_per_slice')
+            if i % 30 == 0:
+                self.write_file(results, 'bak' + str(i))
+                results = []
 
     def write_file(self, item, title):
         with open('storage/' + title, 'wb') as fle:
-            fle.write(item)
+            pickle.dump(item, fle)
 
     def transform_analysis(self):
         result_a = bytes()
