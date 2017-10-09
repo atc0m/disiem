@@ -32,16 +32,6 @@ class Storage(object):
                 for filename in ordered_files:
                     if all([not filename.endswith(end) for end in self.ignored]):
                         structure[software][device][filename] = os.path.join(root, filename)
-
-        self.delta_map[0] = {}
-        for software, devices in structure.items():
-            self.delta_map[0][software] = {}
-            for device, files in devices.items():
-                for filename, path in files.items():
-                    self.delta_map[0][software][device] = (filename, path, 0)
-                    break
-        # second slice does not start where the first one ends
-        self.delta_map[1] = self.delta_map[0].copy()
         self.display_structure(structure)
 
         return structure
@@ -90,6 +80,16 @@ class Storage(object):
 
     def time_slice(self, delta):
         data = {}
+        if not self.delta_map:
+            self.delta_map[delta] = {}
+            for software, devices in self.log_structure.items():
+                self.delta_map[delta][software] = {}
+                for device, files in devices.items():
+                    for filename, path in files.items():
+                        self.delta_map[delta][software][device] = (filename, path, 0)
+                        break
+            # second slice does not start where the first one ends
+            self.delta_map[delta + 1] = self.delta_map[delta].copy()
         if self.delta_map.get(delta):
             for software, devices in self.delta_map[delta].items():
                 print software

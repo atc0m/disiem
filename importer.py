@@ -7,14 +7,14 @@ import redis
 import pytz
 import itertools
 import pickle
-import pandas as pd
+# import pandas as pd
 from collections import OrderedDict
 from storage import Storage
 from random import randint
 
 class Importer(object):
     def __init__(self, conf, data_folder):
-        start = datetime.datetime(2017, 4, 15, 2, 0, 1, tzinfo=pytz.utc)
+        start = datetime.datetime(2017, 4, 15, 3, 30, 0, tzinfo=pytz.utc)
         '''
         r = redis.Redis(
             host='localhost',
@@ -34,7 +34,7 @@ class Importer(object):
 
     def log_import(self):
         results = []
-        for i in range(1440):
+        for i in range(91, 1441):
             print '---- Iteration {} ----'.format(i)
             logs = self.storage.time_slice(i)
             results.append(self.find_common(logs))
