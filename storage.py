@@ -137,7 +137,7 @@ class Storage(object):
 
         return logs
 
-    def save_state(delta, key, device, state):
+    def save_state(self, delta, key, device, state):
         if not self.delta_map.get(delta + 2):
             self.delta_map[delta + 2] = {}
         if not self.delta_map.get(delta + 2).get(key):
