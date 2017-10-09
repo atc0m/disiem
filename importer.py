@@ -30,23 +30,26 @@ class Importer(object):
 
     def time_map(self):
         time_map = self.storage.time_map()
+        self.write_file(pickle.dumps(time_map), 'time_map')
 
     def log_import(self):
         results = []
-        for i in range(10):
+        for i in range(1440):
             print '---- Iteration {} ----'.format(i)
             logs = self.storage.time_slice(i)
             results.append(self.find_common(logs))
+            if i % 2 == 0:
+                self.write_file(pickle.dumps(results), 'bak' + str(i))
 
-        self.write_file(pickle.dumps(results))
+        self.write_file(pickle.dumps(results), 'common_log_per_slice')
 
-    def write_file(self, item):
-        with open('results', 'wb') as fle:
+    def write_file(self, item, title):
+        with open('storage/' + title, 'wb') as fle:
             fle.write(item)
 
     def transform_analysis(self):
         result_a = bytes()
-        with open('results', 'rb') as fle:
+        with open('storage/common_log_per_slice', 'rb') as fle:
             result_a = fle.read()
         results = pickle.loads(result_a)
         self.print_analysis(results)
@@ -66,7 +69,7 @@ class Importer(object):
             df = df.sort_values(sorting_term, ascending=False)
 
         # return analysis in csv format as a string
-        return df.to_csv('output.csv')
+        return df.to_csv('reports/output.csv')
 
     def print_analysis_simulation(self, some_analysis, sorting_term=None):
         if some_analysis:

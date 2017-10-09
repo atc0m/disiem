@@ -46,12 +46,16 @@ conf = {
 }
 
 data_folder = 'data/'
+importer = Importer(conf, data_folder)
 
 def parse_logs():
     # json field names and processing options for each software logs  dateutil.parser.parse('2017-04-15T00:00:03+00:00').replace(tzinfo=pytz.utc)
-    importer = Importer(conf, data_folder)
-    #importer.log_import()
-    #importer.transform_analysis()
+    importer.log_import()
+
+def transform_analysis():
+    importer.transform_analysis()
+
+def time_map():
     importer.time_map()
 
 def sort_file():
@@ -59,7 +63,15 @@ def sort_file():
     sort_log_file('mcafee', 'cleaning/all.txt', wrapper_manager)
 
 def main():
-    parse_logs()
+    options = {
+        1: ('1 - import logs', parse_logs),
+        2: ('2 - export results', transform_analysis),
+        3: ('3 - time coverage', time_map)
+    }
+    print '\n\n'.join([option[0] for option in options.values()])
+    choice = raw_input('Choose function: ')
+    if int(choice) in options.keys():
+        options[int(choice)][1]()
 
 
 if __name__ == '__main__':
