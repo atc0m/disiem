@@ -109,6 +109,7 @@ class Storage(object):
             print device
             found = False
             files_end = True
+            line_number = 0
             for name, path in self.log_structure[key][device].items():
                 if state[0] == name:
                     found = True
@@ -118,6 +119,7 @@ class Storage(object):
                         for i, line in enumerate(fn):
                             if i >= state[2]:
                                 log = self.dict_manager.get_wrapper(key, json.loads(line))
+                                line_number = i
                                 if log.get_time() < start:
                                     continue
                                 if log.get_time() > end:
@@ -128,11 +130,11 @@ class Storage(object):
                                 else:
                                     logs[log.get_src()] = [log]
                     if not files_end:
-                        next_state = (name, path, i)
+                        next_state = (name, path, line_number)
                         self.save_state(delta, key, device, next_state)
                         break
             if files_end:
-                next_state = (name, path, i)
+                next_state = (name, path, line_number)
                 self.save_state(delta, key, device, next_state)
 
         return logs
