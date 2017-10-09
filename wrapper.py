@@ -32,6 +32,7 @@ class Wrapper(dict):
         self.date = date
         self.date_return = date_return
 
+
     def get_src(self):
         return self.get(self.source_ip)
 
@@ -40,3 +41,12 @@ class Wrapper(dict):
 
     def get_time(self):
         return self.date_return(self[self.date])
+
+    def get_dict(self):
+        return dict(self.items())
+
+    def __eq__(self, other):
+        return tuple(sorted(self.items())) == tuple(sorted(other.items()))
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))

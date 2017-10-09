@@ -38,7 +38,7 @@ class Importer(object):
             print '---- Iteration {} ----'.format(i)
             logs = self.storage.time_slice(i)
             results.append(self.find_common(logs))
-            if i % 2 == 0:
+            if i % 60 == 0:
                 self.write_file(pickle.dumps(results), 'bak' + str(i))
 
         self.write_file(pickle.dumps(results), 'common_log_per_slice')
@@ -97,7 +97,7 @@ class Importer(object):
                 combination = tuple(sorted(c))
                 ip_sets = [set(logs[component].keys()) for component in combination]
                 common_ips[combination] = {
-                    ip: [len(logs[component][ip]) for component in combination]
+                    ip: {component: [wrapper.get_dict() for wrapper in logs[component][ip]]  for component in combination}
                     for ip in ip_sets[0].intersection(*ip_sets[1:])
                 }
         return common_ips

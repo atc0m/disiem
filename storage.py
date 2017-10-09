@@ -73,9 +73,10 @@ class Storage(object):
             for path in time['files']:
                 with open(path) as fl:
                     lines = fl.readlines()
-                    log = self.dict_manager.get_wrapper(software, json.loads(time['region'](lines)))
-                    if not time['time'] or time['compare'](time['time'], log.get_time()):
-                        window[part]['time'] = log.get_time()
+                    if lines:
+                        log = self.dict_manager.get_wrapper(software, json.loads(time['region'](lines)))
+                        if not time['time'] or time['compare'](time['time'], log.get_time()):
+                            window[part]['time'] = log.get_time()
         return {
             key: value['time']
             for key, value
