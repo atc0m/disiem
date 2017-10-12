@@ -44,8 +44,11 @@ class Importer(object):
                 results = []
 
     def write_file(self, item, title):
+        print 'Writing file: ' + title
+        start = time.time()
         with open('storage/' + title, 'wb') as fle:
             pickle.dump(item, fle)
+        print 'Took ' + str(time.time() - start) + ' seconds'
 
     def transform_analysis(self, data_folder, file_stub):
         sorted_filenames = sorted(
@@ -54,8 +57,11 @@ class Importer(object):
         )
         for filename in sorted_filenames:
             results = []
+            print 'Opening: ' + filename
+            start = time.time()
             with open(os.path.join(data_folder, filename), 'rb') as fle:
-                results = pickle.loads(fle.read())
+                results = pickle.load(fle)
+            print 'Took ' + str(time.time() - start) + ' seconds'
             self.summarise_traffic_analysis(results, filename)
             # self.print_analysis(results)
 
