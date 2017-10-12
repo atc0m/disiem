@@ -73,7 +73,7 @@ class Importer(object):
                     if combinations not in summary:
                         summary[combinations] = stats
                     else:
-                        for key, stat in stats.items()
+                        for key, stat in stats.items():
                             summary[combinations][key] += stat
         self.write_file(summary, 'summary_' + filename)
 
