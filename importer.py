@@ -34,11 +34,12 @@ class Importer(object):
 
     def log_import(self):
         results = []
-        for i in range(91, 1441):
+        for i in range(391, 1441):
             print '---- Iteration {} ----'.format(i)
             logs = self.storage.time_slice(i)
             results.append(self.find_common(logs))
             if i % 30 == 0:
+                self.write_file(self.storage.delta_map, 'delta_map' + str(i))
                 self.write_file(results, 'bak' + str(i))
                 results = []
 
@@ -46,17 +47,39 @@ class Importer(object):
         with open('storage/' + title, 'wb') as fle:
             pickle.dump(item, fle)
 
-    def transform_analysis(self):
-        result_a = bytes()
-        with open('reports/bak', 'rb') as fle:
-            result_a = fle.read()
-        results = pickle.loads(result_a)
-        self.print_analysis(results)
+    def transform_analysis(self, data_folder, file_stub):
+        sorted_filenames = sorted(
+            [filename for filename in os.listdir(data_folder) if filename.startswith(file_stub)],
+            key=lambda x: int(x[len(file_stub):])
+        )
+        for filename in sorted_filenames:
+            results = []
+            with open(os.path.join(data_folder, filename), 'rb') as fle:
+                results = pickle.loads(fle.read())
+            self.summarise_traffic_analysis(results, filename)
+            # self.print_analysis(results)
+
+    def summarise_traffic_analysis(self, results, filename):
+        summary = {}
+        for i, time_slice in enumerate(results):
+            if i % 2 == 0:
+                for combinations, addresses in time_slice.items():
+                    stats = {
+                        'unique': len(addresses.keys()),
+                        'traffic': max(
+                            [len(requests) for requests in addresses.values()]
+                        )
+                    }
+                    if combinations not in summary:
+                        summary[combinations] = stats
+                    else:
+                        for key, stat in stats.items()
+                            summary[combinations][key] += stat
+        self.write_file(summary, 'summary_' + filename)
 
     def print_analysis(self, some_analysis, sorting_term=None):
         if some_analysis:
             col_order = sorted(some_analysis[0].keys(), key=lambda l: len(l))
-
         # transform to dict of dict indexed by class name
         analysis = {}
         for i, stats in enumerate(some_analysis):

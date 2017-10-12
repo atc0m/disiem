@@ -4,7 +4,7 @@ import pytz
 from storage import Storage
 from importer import Importer
 from wrapper import WrapperManager
-from oneoff import sort_log_file
+from oneoff import sort_log_file, time_coverage_graph
 
 conf = {
     'bro': {
@@ -53,7 +53,10 @@ def parse_logs():
     importer.log_import()
 
 def transform_analysis():
-    importer.transform_analysis()
+    importer.transform_analysis(
+        data_folder='reports/',
+        file_stub='bak'
+    )
 
 def time_map():
     importer.time_map()
