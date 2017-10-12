@@ -54,7 +54,7 @@ def parse_logs():
 
 def transform_analysis():
     importer.transform_analysis(
-        data_folder='reports/',
+        data_folder='storage/',
         file_stub='bak'
     )
 
