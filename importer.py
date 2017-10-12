@@ -67,7 +67,7 @@ class Importer(object):
                     stats = {
                         'unique': len(addresses.keys()),
                         'traffic': max(
-                            [0] if not adresses.values() else
+                            [0] if not addresses.values() else
                             [len(requests) for requests in addresses.values()]
                         )
                     }
