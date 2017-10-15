@@ -3,7 +3,6 @@ import re
 import os
 import datetime
 import time
-import redis
 import pytz
 import itertools
 import pickle
@@ -15,12 +14,6 @@ from random import randint
 class Importer(object):
     def __init__(self, conf, data_folder):
         start = datetime.datetime(2017, 4, 15, 3, 30, 0, tzinfo=pytz.utc)
-        '''
-        r = redis.Redis(
-            host='localhost',
-            port='6379'
-        )
-        '''
         self.storage = Storage(
             data_folder=data_folder,
             conf=conf,
@@ -65,6 +58,20 @@ class Importer(object):
             self.summarise_traffic_analysis(results, filename)
             # self.print_analysis(results)
 
+    def export_summary_analysis(self, data_folder, file_stub):
+        sorted_filenames = sorted(
+            [filename for filename in os.listdir(data_folder) if filename.startswith(file_stub)],
+            key=lambda x: int(x[len(file_stub):])
+        )
+        results = []
+        for filename in sorted_filenames:
+            print 'Opening: ' + filename
+            start = time.time()
+            with open(os.path.join(data_folder, filename), 'rb') as fle:
+                results.append(pickle.load(fle))
+            print 'Took ' + str(time.time() - start) + ' seconds'
+        self.print_analysis(results)
+
     def summarise_traffic_analysis(self, results, filename):
         summary = {}
         for i, time_slice in enumerate(results):
@@ -84,39 +91,19 @@ class Importer(object):
                             summary[combinations][key] += stat
         self.write_file(summary, 'summary_' + filename)
 
-    def print_analysis(self, some_analysis, sorting_term=None):
-        if some_analysis:
-            col_order = sorted(some_analysis[0].keys(), key=lambda l: len(l))
+    def print_analysis(self, results):
+        if results:
+            columns = sorted(results[0].keys(), key=lambda l: len(l))
         # transform to dict of dict indexed by class name
         analysis = {}
-        for i, stats in enumerate(some_analysis):
-            analysis[i] = OrderedDict([(str(k), stats[k]) for k in col_order])
+        for i, stats in enumerate(results):
+            analysis[i] = OrderedDict([(str(k), stats[k]['traffic']) for k in columns])
 
         # Create a dataframe and sort if required
         df = pd.DataFrame.from_dict(analysis, orient='index')
-        if sorting_term:
-            df = df.sort_values(sorting_term, ascending=False)
 
         # return analysis in csv format as a string
-        return df.to_csv('reports/output.csv')
-
-    def print_analysis_simulation(self, some_analysis, sorting_term=None):
-        if some_analysis:
-            col_order = sorted(some_analysis[0].keys(), key=lambda l: len(l))
-
-        # transform to dict of dict indexed by class name
-        analysis = []
-        for i, stats in enumerate(some_analysis):
-            if i >= 14 or i <= 29:
-                analysis.append(OrderedDict([(str(k), 30 * len(stats[k]) + randint(0,30) if len(stats[k]) > 0 else 0) for k in col_order]))
-
-        # Create a dataframe and sort if required
-        df = pd.DataFrame.from_dict(dict(zip(range(0,15), analysis)), orient='index')
-        if sorting_term:
-            df = df.sort_values(sorting_term, ascending=False)
-
-        # return analysis in csv format as a string
-        return df.to_csv('output.csv')
+        return df.to_csv('reports/traffic_output.csv')
 
     def find_common(self, logs):
         combinations = []

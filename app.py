@@ -58,6 +58,12 @@ def transform_analysis():
         file_stub='bak'
     )
 
+def export_summary():
+    importer.export_summary_analysis(
+        data_folder='storage/',
+        file_stub='summary_bak'
+    )
+
 def time_map():
     importer.time_map()
 
@@ -68,8 +74,9 @@ def sort_file():
 def main():
     options = {
         1: ('1 - import logs', parse_logs),
-        2: ('2 - export results', transform_analysis),
-        3: ('3 - time coverage', time_map)
+        2: ('2 - summarise results', transform_analysis),
+        3: ('3 - export summary analysis', export_summary),
+        4: ('4 - time coverage', time_map)
     }
     print '\n\n'.join([option[0] for option in options.values()])
     choice = raw_input('Choose function: ')
