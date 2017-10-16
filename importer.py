@@ -94,7 +94,7 @@ class Importer(object):
         )
         results = []
         for filename in sorted_filenames:
-            results = self.load_pickled_file(os.path.join(data_folder))
+            results = self.storage.load_file(os.path.join(data_folder))
         self.print_analysis(results)
 
     def summarise_traffic_analysis(self, results, filename):

@@ -144,7 +144,7 @@ class Storage(object):
         print 'Opening: ' + filename
         start = time.time()
         with open(path, 'rb') as fle:
-            data.append(pickle.load(fle))
+            data = pickle.load(fle)
         print 'Took ' + str(time.time() - start) + ' seconds'
         return data
 
