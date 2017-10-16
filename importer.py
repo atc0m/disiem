@@ -13,12 +13,13 @@ from random import randint
 
 class Importer(object):
     def __init__(self, conf, data_folder):
-        start = datetime.datetime(2017, 4, 15, 3, 30, 0, tzinfo=pytz.utc)
+        start = datetime.datetime(2017, 4, 14, 22, 0, 0, tzinfo=pytz.utc)
+        self.end = datetime.datetime(2017, 4, 18, 8, 0, 0, tzinfo=pytz.utc)
         self.storage = Storage(
             data_folder=data_folder,
             conf=conf,
             start=start,
-            increment=120
+            increment=300
         )
 
     def time_map(self):
@@ -29,12 +30,40 @@ class Importer(object):
         results = []
         for i in range(391, 1441):
             print '---- Iteration {} ----'.format(i)
-            logs = self.storage.time_slice(i)
+            logs = self.storage.load_time_slice(i, lambda x: x/2)
             results.append(self.find_common(logs))
             if i % 30 == 0:
                 self.write_file(self.storage.delta_map, 'delta_map' + str(i))
                 self.write_file(results, 'bak' + str(i))
                 results = []
+
+    def traffic_frequency(self):
+        time_frequency = OrderedDict([
+            (
+                software,
+                {
+                    'requests': 0,
+                    'unique': 0
+                }
+            ) for software in self.storage.log_structure.keys()])
+        for i in range(1, 985):
+            print '---- Iteration {} ----'.format(i)
+            logs = self.storage.load_time_slice(i, lambda x: x)
+            for software in logs:
+                time_frequency[software]['requests'] += sum([len(requests) for requests in logs[software].values()])
+                time_frequency[software]['unique'] += len(logs[software].keys())
+                print software + '\t' + str(time_frequency[software])
+            if i % 12 == 0:
+                self.write_file(self.storage.delta_map, 'traffic_delta_map' + str(i))
+                self.write_file(time_frequency, 'traffic' + str(i))
+                time_frequency = OrderedDict([
+                    (
+                        software,
+                        {
+                            'requests': 0,
+                            'unique': 0
+                        }
+                    ) for software in self.storage.log_structure.keys()])
 
     def write_file(self, item, title):
         print 'Writing file: ' + title
@@ -65,11 +94,7 @@ class Importer(object):
         )
         results = []
         for filename in sorted_filenames:
-            print 'Opening: ' + filename
-            start = time.time()
-            with open(os.path.join(data_folder, filename), 'rb') as fle:
-                results.append(pickle.load(fle))
-            print 'Took ' + str(time.time() - start) + ' seconds'
+            results = self.load_pickled_file(os.path.join(data_folder))
         self.print_analysis(results)
 
     def summarise_traffic_analysis(self, results, filename):
@@ -91,8 +116,8 @@ class Importer(object):
                             summary[combinations][key] += stat
         self.write_file(summary, 'summary_' + filename)
 
-    def print_analysis(self, results):
-        if results:
+    def print_analysis(self, results, sort=True):
+        if sort:
             columns = sorted(results[0].keys(), key=lambda l: len(l))
         # transform to dict of dict indexed by class name
         analysis = {}

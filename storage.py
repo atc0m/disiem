@@ -78,7 +78,7 @@ class Storage(object):
         }
 
 
-    def time_slice(self, delta):
+    def load_time_slice(self, delta, increment_lambda):
         data = {}
         if not self.delta_map:
             self.delta_map[delta] = {}
@@ -93,16 +93,17 @@ class Storage(object):
         if self.delta_map.get(delta):
             for software, devices in self.delta_map[delta].items():
                 print software
-                data[software] = self.load_data(
+                data[software] = self.load_file_time_slice(
                     devices=devices,
                     key=software,
-                    delta=delta
+                    delta=delta,
+                    start_func=self.start + timedelta(seconds=delta*(increment_lambda(self.increment)))
                 )
                 print len(data[software])
         return data
 
-    def load_data(self, key, devices, delta):
-        start = self.start + timedelta(seconds=delta*(self.increment/2))
+    def load_file_time_slice(self, key, devices, delta, start_func):
+        start = start_func
         end = start + timedelta(seconds=self.increment)
         logs = {}
         for device, state in devices.items():
@@ -138,6 +139,14 @@ class Storage(object):
                 self.save_state(delta, key, device, next_state)
 
         return logs
+
+    def load_file(self, path):
+        print 'Opening: ' + filename
+        start = time.time()
+        with open(path, 'rb') as fle:
+            data.append(pickle.load(fle))
+        print 'Took ' + str(time.time() - start) + ' seconds'
+        return data
 
     def save_state(self, delta, key, device, state):
         if not self.delta_map.get(delta + 2):

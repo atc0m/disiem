@@ -71,12 +71,16 @@ def sort_file():
     wrapper_manager = WrapperManager(conf)
     sort_log_file('mcafee', 'cleaning/all.txt', wrapper_manager)
 
+def traffic_frequency():
+    importer.traffic_frequency()
+
 def main():
     options = {
         1: ('1 - import logs', parse_logs),
         2: ('2 - summarise results', transform_analysis),
         3: ('3 - export summary analysis', export_summary),
-        4: ('4 - time coverage', time_map)
+        4: ('4 - time coverage', time_map),
+        5: ('5 - traffic frequency', traffic_frequency)
     }
     print '\n\n'.join([option[0] for option in options.values()])
     choice = raw_input('Choose function: ')
