@@ -74,13 +74,20 @@ def sort_file():
 def traffic_frequency():
     importer.traffic_frequency()
 
+def load_dir_stub():
+    importer.combine_traffic_data(
+        data_folder='storage/t_bak',
+        file_stub='traffic'
+    )
+
 def main():
     options = {
         1: ('1 - import logs', parse_logs),
         2: ('2 - summarise results', transform_analysis),
         3: ('3 - export summary analysis', export_summary),
         4: ('4 - time coverage', time_map),
-        5: ('5 - traffic frequency', traffic_frequency)
+        5: ('5 - traffic frequency', traffic_frequency),
+        6: ('6 - load', load_dir_stub),
     }
     print '\n\n'.join([option[0] for option in options.values()])
     choice = raw_input('Choose function: ')

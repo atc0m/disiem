@@ -30,7 +30,7 @@ class Importer(object):
         results = []
         for i in range(391, 1441):
             print '---- Iteration {} ----'.format(i)
-            logs = self.storage.load_time_slice(i, lambda x: x/2)
+            logs = self.storage.load_time_slice(i, lambda x: x/2, , state_step=2)
             results.append(self.find_common(logs))
             if i % 30 == 0:
                 self.write_file(self.storage.delta_map, 'delta_map' + str(i))
@@ -45,16 +45,23 @@ class Importer(object):
                     'requests': 0,
                     'unique': 0
                 }
-            ) for software in self.storage.log_structure.keys()])
+            ) for software in self.storage.log_structure.keys()
+        ])
         for i in range(1, 985):
             print '---- Iteration {} ----'.format(i)
-            logs = self.storage.load_time_slice(i, lambda x: x)
+            logs = self.storage.load_time_slice(i, lambda x: x, state_step=1)
             for software in logs:
-                time_frequency[software]['requests'] += sum([len(requests) for requests in logs[software].values()])
+                time_frequency[software]['requests'] += sum([
+                    len(requests)
+                    for requests in logs[software].values()
+                ])
                 time_frequency[software]['unique'] += len(logs[software].keys())
                 print software + '\t' + str(time_frequency[software])
             if i % 12 == 0:
-                self.write_file(self.storage.delta_map, 'traffic_delta_map' + str(i))
+                self.write_file(
+                    self.storage.delta_map,
+                    'traffic_delta_map' + str(i)
+                )
                 self.write_file(time_frequency, 'traffic' + str(i))
                 time_frequency = OrderedDict([
                     (
@@ -72,11 +79,21 @@ class Importer(object):
             pickle.dump(item, fle)
         print 'Took ' + str(time.time() - start) + ' seconds'
 
+    def sorted_filepaths(self, data_folder, file_stub):
+        return [
+            os.path.join(data_folder, filename)
+            for filename in sorted(
+                [
+                    filename
+                    for filename in os.listdir(data_folder) \
+                    if filename.startswith(file_stub)
+                ],
+                key=lambda x: int(x[len(file_stub):])
+            )
+        ]
+
     def transform_analysis(self, data_folder, file_stub):
-        sorted_filenames = sorted(
-            [filename for filename in os.listdir(data_folder) if filename.startswith(file_stub)],
-            key=lambda x: int(x[len(file_stub):])
-        )
+        sorted_filenames = self.sort_filepaths(data_folder, file_stub)
         for filename in sorted_filenames:
             results = []
             print 'Opening: ' + filename
@@ -87,14 +104,35 @@ class Importer(object):
             self.summarise_traffic_analysis(results, filename)
             # self.print_analysis(results)
 
-    def export_summary_analysis(self, data_folder, file_stub):
-        sorted_filenames = sorted(
-            [filename for filename in os.listdir(data_folder) if filename.startswith(file_stub)],
-            key=lambda x: int(x[len(file_stub):])
-        )
+    def combine_traffic_data(self, data_folder, file_stub):
+        traffic_data = self.load_dir_stub(data_folder, file_stub)
+        software_traffic = OrderedDict([
+            (software, {key: [] for key in traffic.keys()})
+            for software, traffic in traffic_data[0].items()
+        ])
+        for data in traffic_data:
+            for software, traffic in data.items():
+                [
+                    software_traffic[software][key].append(value)
+                    for key, value in traffic.items()
+                ]
+        import code
+        code.interact(local=locals())
+        self.write_file(software_traffic, 'traffic_per_5_minutes')
+
+    def load_dir_stub(self, data_folder, file_stub):
+        sorted_filepaths = self.sorted_filepaths(data_folder, file_stub)
+        data = []
+        for i, filepath in enumerate(sorted_filepaths):
+            current = self.storage.load_file(filepath)
+            data.append(current)
+        return data
+
+    def load_summary_analysis(self, data_folder, file_stub):
+        sorted_filepaths = self.sorted_filepaths(data_folder, file_stub)
         results = []
-        for filename in sorted_filenames:
-            results = self.storage.load_file(os.path.join(data_folder))
+        for filepath in sorted_filepaths:
+            results = self.storage.load_file(filepath)
         self.print_analysis(results)
 
     def summarise_traffic_analysis(self, results, filename):
@@ -122,7 +160,10 @@ class Importer(object):
         # transform to dict of dict indexed by class name
         analysis = {}
         for i, stats in enumerate(results):
-            analysis[i] = OrderedDict([(str(k), stats[k]['traffic']) for k in columns])
+            analysis[i] = OrderedDict([
+                (str(k), stats[k]['traffic'])
+                for k in columns
+            ])
 
         # Create a dataframe and sort if required
         df = pd.DataFrame.from_dict(analysis, orient='index')
@@ -136,9 +177,16 @@ class Importer(object):
         for r in range(2, len(logs.keys()) + 1):
             for c in itertools.combinations(logs.keys(), r):
                 combination = tuple(sorted(c))
-                ip_sets = [set(logs[component].keys()) for component in combination]
+                ip_sets = [
+                    set(logs[component].keys())
+                    for component in combination
+                ]
                 common_ips[combination] = {
-                    ip: {component: [wrapper.get_dict() for wrapper in logs[component][ip]]  for component in combination}
+                    ip: {
+                        component: [wrapper.get_dict()
+                        for wrapper in logs[component][ip]]
+                        for component in combination
+                    }
                     for ip in ip_sets[0].intersection(*ip_sets[1:])
                 }
         return common_ips

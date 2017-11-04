@@ -1,5 +1,7 @@
 import os
 import json
+import time
+import pickle
 from datetime import datetime, timedelta
 from wrapper import WrapperManager
 from collections import OrderedDict
@@ -78,7 +80,7 @@ class Storage(object):
         }
 
 
-    def load_time_slice(self, delta, increment_lambda):
+    def load_time_slice(self, delta, increment_lambda, state_step):
         data = {}
         if not self.delta_map:
             self.delta_map[delta] = {}
@@ -97,12 +99,13 @@ class Storage(object):
                     devices=devices,
                     key=software,
                     delta=delta,
-                    start_func=self.start + timedelta(seconds=delta*(increment_lambda(self.increment)))
+                    start_func=self.start + timedelta(seconds=delta*(increment_lambda(self.increment))),
+                    state_step=state_step
                 )
                 print len(data[software])
         return data
 
-    def load_file_time_slice(self, key, devices, delta, start_func):
+    def load_file_time_slice(self, key, devices, delta, start_func, state_step):
         start = start_func
         end = start + timedelta(seconds=self.increment)
         logs = {}
@@ -132,29 +135,29 @@ class Storage(object):
                                     logs[log.get_src()] = [log]
                     if not files_end:
                         next_state = (name, path, line_number)
-                        self.save_state(delta, key, device, next_state)
+                        self.save_state(delta, key, device, next_state, state_step)
                         break
             if files_end:
                 next_state = (name, path, line_number)
-                self.save_state(delta, key, device, next_state)
+                self.save_state(delta, key, device, next_state, state_step)
 
         return logs
 
     def load_file(self, path):
-        print 'Opening: ' + filename
+        print 'Opening: ' + path
         start = time.time()
         with open(path, 'rb') as fle:
             data = pickle.load(fle)
         print 'Took ' + str(time.time() - start) + ' seconds'
         return data
 
-    def save_state(self, delta, key, device, state):
-        if not self.delta_map.get(delta + 2):
-            self.delta_map[delta + 2] = {}
-        if not self.delta_map.get(delta + 2).get(key):
-            self.delta_map[delta + 2][key] = {}
+    def save_state(self, delta, key, device, state, state_step):
+        if not self.delta_map.get(delta + state_step):
+            self.delta_map[delta + state_step] = {}
+        if not self.delta_map.get(delta + state_step).get(key):
+            self.delta_map[delta + state_step][key] = {}
         print '---- saved state {} ----'.format(state)
-        self.delta_map[delta + 2][key][device] = state
+        self.delta_map[delta + state_step][key][device] = state
 
     def display_structure(self, structure):
         print '----\tFile Structure\t----'

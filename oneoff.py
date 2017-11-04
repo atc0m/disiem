@@ -31,3 +31,6 @@ def time_coverage_graph():
         fig,
         filename='coverage'
     )
+
+def time_traffic_graph():
+    return 0
