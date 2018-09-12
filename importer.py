@@ -30,7 +30,7 @@ class Importer(object):
         results = []
         for i in range(391, 1441):
             print '---- Iteration {} ----'.format(i)
-            logs = self.storage.load_time_slice(i, lambda x: x/2, , state_step=2)
+            logs = self.storage.load_time_slice(i, lambda x: x/2, state_step=2)
             results.append(self.find_common(logs))
             if i % 30 == 0:
                 self.write_file(self.storage.delta_map, 'delta_map' + str(i))
